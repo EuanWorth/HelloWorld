@@ -1,0 +1,214 @@
+﻿Public Class GamePlayForm
+    Const Mapheight = 2
+    Const MapWidth = 2
+    Public Map(MapWidth, Mapheight) As Room
+    Dim status As String
+    Public Maxhealth As Integer = 100
+    Public Health As Integer = 100
+    Public PlayerName As String
+    Public PlayerClass As String = ""
+    Public PlayerWeapon As Weapon = New Weapon
+    Public LocationX As Integer = 1
+    Public LocationY As Integer = 1
+    Dim NewHeight As Integer
+    Public CurrentFight As Fight
+    Public ClassPowerCharged As Boolean = False
+    Public Sub CreateMap(sender As Object, e As EventArgs) Handles MyBase.Load
+        NewHeight = Height - 30
+        For y = 1 To Mapheight
+            For x = 1 To MapWidth
+                Map(x, y) = RoomFromFile(x & "," & y)
+            Next
+        Next
+        Map(LocationX, LocationY).EnterRoom()
+        GiveBaseWeapon()
+    End Sub
+
+    Sub GiveBaseWeapon()
+        PlayerWeapon.Damage = 25
+        PlayerWeapon.Speed = 10
+        PlayerWeapon.Block = 50
+        PlayerWeapon.Name = "BaseWeapon"
+    End Sub
+
+#Region "Screens"
+    Public Sub ScreenInteractions()
+        LeftPB.Width = Width / 4
+        LeftPB.Height = NewHeight
+        MainPB.Height = NewHeight / 2
+        MainPB.Width = Width / 2
+        MainPB.Location = New Point(Width / 4, 30)
+        RightPB.Size = LeftPB.Size
+        RightPB.Location = New Point(Width / 4 * 3, 30)
+        TextLBL.Location = New Point(Width / 4, NewHeight / 2 + 30)
+        TextLBL.Height = NewHeight / 4
+        TextLBL.Width = Width / 2
+        MainBTN.Height = NewHeight / 4
+        MainBTN.Width = Width / 2
+        MainBTN.Location = New Point(Width / 4, NewHeight / 4 * 3 + 30)
+        LeftBTN.Visible = False
+        DownBTN.Visible = False
+        RightBTN.Visible = False
+        MainBTN.Visible = True
+        LeftBTN.Enabled = False
+        RightBTN.Enabled = False
+        DownBTN.Enabled = False
+        MainBTN.Enabled = True
+        MainBTN.Text = "Next"
+        status = "interaction"
+        MenuButton.Location = New Point(Width - 45, 0)
+    End Sub
+
+    Public Sub ScreenMotion()
+        LeftPB.Width = Width / 4
+        LeftPB.Height = NewHeight
+        MainPB.Height = NewHeight / 2
+        MainPB.Width = Width / 2
+        MainPB.Location = New Point(Width / 4, 30)
+        RightPB.Size = LeftPB.Size
+        RightPB.Location = New Point(Width / 4 * 3, 30)
+        TextLBL.Location = New Point(Width / 4, NewHeight / 2 + 30)
+        TextLBL.Height = NewHeight / 4
+        TextLBL.Width = Width / 2
+        MainBTN.Height = NewHeight / 8
+        MainBTN.Width = Width / 2
+        MainBTN.Location = New Point(Width / 4, NewHeight / 4 * 3 + 30)
+        LeftBTN.Location = New Point(Width / 4, NewHeight / 8 * 7 + 30)
+        LeftBTN.Height = NewHeight / 8
+        LeftBTN.Width = Width / 6
+        DownBTN.Size = LeftBTN.Size
+        DownBTN.Location = New Point(Width / 4 + Width / 6, NewHeight / 8 * 7 + 30)
+        RightBTN.Size = LeftBTN.Size
+        RightBTN.Location = New Point(Width / 4 + Width / 3, NewHeight / 8 * 7 + 30)
+        LeftBTN.Visible = True
+        DownBTN.Visible = True
+        RightBTN.Visible = True
+        MainBTN.Visible = True
+        LeftBTN.Enabled = Map(LocationX, LocationY).LeftMove
+        RightBTN.Enabled = Map(LocationX, LocationY).RightMove
+        DownBTN.Enabled = Map(LocationX, LocationY).BackwardMove
+        MainBTN.Enabled = Map(LocationX, LocationY).ForwardMove
+        status = "motion"
+        TextLBL.Text = "Select Direction"
+        LeftBTN.Text = "←"
+        MainBTN.Text = "↑"
+        RightBTN.Text = "→"
+        DownBTN.Text = "↓"
+    End Sub
+    Public Sub ScreenDecision()
+        LeftPB.Width = Width / 4
+        LeftPB.Height = NewHeight
+        MainPB.Height = NewHeight / 2
+        MainPB.Width = Width / 2
+        MainPB.Location = New Point(Width / 4, 30)
+        RightPB.Size = LeftPB.Size
+        RightPB.Location = New Point(Width / 4 * 3, 30)
+        TextLBL.Location = New Point(Width / 4, NewHeight / 2 + 30)
+        TextLBL.Height = NewHeight / 4
+        TextLBL.Width = Width / 2
+        MainBTN.Height = NewHeight / 8
+        MainBTN.Width = Width / 2
+        MainBTN.Location = New Point(Width / 4, NewHeight / 4 * 3 + 30)
+        LeftBTN.Location = New Point(Width / 4, NewHeight / 4 * 3 + 30)
+        LeftBTN.Height = NewHeight / 8
+        LeftBTN.Width = Width / 6
+        DownBTN.Size = LeftBTN.Size
+        DownBTN.Location = New Point(Width / 4 + Width / 6, NewHeight / 8 * 7 + 30)
+        RightBTN.Size = LeftBTN.Size
+        RightBTN.Location = New Point(Width / 2, NewHeight / 4 * 3 + 30)
+        LeftBTN.Visible = True
+        DownBTN.Visible = False
+        RightBTN.Visible = True
+        MainBTN.Visible = False
+        LeftBTN.Enabled = True
+        RightBTN.Enabled = True
+        DownBTN.Enabled = False
+        MainBTN.Enabled = True
+        status = "decision"
+    End Sub
+    Public Sub ScreenCombat()
+        LeftPB.Width = Width / 4
+        LeftPB.Height = NewHeight
+        MainPB.Height = NewHeight
+        MainPB.Width = Width / 4
+        MainPB.Location = New Point(Width / 4, 30)
+        RightPB.Size = LeftPB.Size
+        RightPB.Location = New Point(Width / 4 * 3, 30)
+        TextLBL.Location = New Point(Width / 2, 30)
+        TextLBL.Height = NewHeight / 2
+        TextLBL.Width = Width / 4
+        MainBTN.Height = NewHeight / 4
+        MainBTN.Width = Width / 8
+        MainBTN.Location = New Point(Width / 2, NewHeight / 2 + 30)
+        LeftBTN.Location = New Point(Width / 2, NewHeight / 4 * 3 + 30)
+        LeftBTN.Height = NewHeight / 4
+        LeftBTN.Width = Width / 8
+        DownBTN.Size = LeftBTN.Size
+        DownBTN.Location = New Point(Width / 8 * 5, NewHeight / 2 + 30)
+        RightBTN.Size = LeftBTN.Size
+        RightBTN.Location = New Point(Width / 8 * 5, NewHeight / 4 * 3 + 30)
+        LeftBTN.Visible = True
+        DownBTN.Visible = True
+        RightBTN.Visible = True
+        MainBTN.Visible = True
+        MainBTN.Enabled = True
+        LeftBTN.Enabled = True
+        RightBTN.Enabled = True
+        DownBTN.Enabled = True
+        status = "combat"
+    End Sub
+
+    Private Sub MainBTN_Click(sender As Object, e As EventArgs) Handles MainBTN.Click
+        Select Case status
+            Case "motion"
+                LocationY += 1
+                Map(LocationX, LocationY).EnterRoom()
+            Case "interaction"
+                If Map(LocationX, LocationY).Position = Map(LocationX, LocationY).Interactions.Length - 1 Then
+                    ScreenMotion()
+                Else
+                    Map(LocationX, LocationY).Position += 1
+                    Map(LocationX, LocationY).Interactions(Map(LocationX, LocationY).Position).Perform()
+                End If
+            Case "combat"
+                CurrentFight.DealDamage(sender)
+        End Select
+    End Sub
+
+    Private Sub LeftBTN_Click(sender As Object, e As EventArgs) Handles LeftBTN.Click
+        Select Case status
+            Case "motion"
+                LocationX -= 1
+                Map(LocationX, LocationY).EnterRoom()
+            Case "combat"
+                CurrentFight.DealDamage(sender)
+        End Select
+    End Sub
+
+    Private Sub RightBTN_Click(sender As Object, e As EventArgs) Handles RightBTN.Click
+        Select Case status
+            Case "motion"
+                LocationX += 1
+                Map(LocationX, LocationY).EnterRoom()
+            Case "combat"
+                CurrentFight.DealDamage(sender)
+        End Select
+    End Sub
+
+    Private Sub DownBTN_Click(sender As Object, e As EventArgs) Handles DownBTN.Click
+        Select Case status
+            Case "motion"
+                LocationY -= 1
+                Map(LocationX, LocationY).EnterRoom()
+            Case "combat"
+                CurrentFight.DealDamage(sender)
+        End Select
+    End Sub
+
+    Private Sub MenuButton_Click(sender As Object, e As EventArgs) Handles MenuButton.Click
+        PauseMenu.Close()
+        PauseMenu.Show()
+    End Sub
+
+#End Region
+End Class
